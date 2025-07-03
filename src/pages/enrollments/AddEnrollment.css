@@ -1,0 +1,213 @@
+.page-wrapper {
+    padding: 20px;
+    margin-left: 260px;
+    background-color: #f5f5f5;
+    min-height: calc(100vh - 60px);
+  }
+  
+  .content {
+    padding: 20px;
+  }
+  
+  .page-header {
+    margin-bottom: 30px;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  .page-title {
+    color: #333;
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+  }
+  
+  .form-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .enrollment-form {
+    padding: 20px;
+  }
+  
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+  }
+  
+  .cancel-button {
+    margin-left: 8px;
+  }
+  
+  /* Estilos para el contenedor de carga */
+  .loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+  }
+  
+  .loading-content {
+    text-align: center;
+    padding: 40px;
+  }
+  
+  .loading-content p {
+    margin-top: 16px;
+    color: #666;
+    font-size: 16px;
+  }
+  
+  /* Personalización del Spin */
+  .ant-spin {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .ant-spin-dot {
+    font-size: 32px;
+  }
+  
+  /* Estilos para los campos del formulario */
+  .ant-form-item {
+    margin-bottom: 24px;
+  }
+  
+  .ant-form-item-label > label {
+    color: #333;
+    font-weight: 500;
+  }
+  
+  .ant-select-selector,
+  .ant-picker {
+    border-radius: 6px !important;
+  }
+  
+  .ant-select-selector:hover,
+  .ant-picker:hover {
+    border-color: #40a9ff !important;
+  }
+  
+  .ant-select-focused .ant-select-selector,
+  .ant-picker-focused {
+    border-color: #1890ff !important;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2) !important;
+  }
+  
+  /* Estilos responsive */
+  @media (max-width: 768px) {
+    .page-wrapper {
+      margin-left: 0;
+      padding: 10px;
+    }
+  
+    .content {
+      padding: 10px;
+    }
+  
+    .enrollment-form {
+      padding: 15px;
+    }
+  
+    .form-actions {
+      flex-direction: column;
+      gap: 8px;
+    }
+  
+    .form-actions button {
+      width: 100%;
+    }
+  
+    .cancel-button {
+      margin-left: 0;
+    }
+  }
+  
+  /* Estilos para las opciones del select de estudiantes */
+  .student-option {
+    display: flex;
+    flex-direction: column;
+    padding: 4px 0;
+  }
+  
+  .student-document {
+    font-size: 12px;
+    color: #666;
+    margin-top: 2px;
+  }
+  
+  /* Personalización del Select */
+  .ant-select-dropdown {
+    padding: 4px;
+  }
+  
+  .ant-select-item {
+    padding: 8px 12px !important;
+    border-radius: 4px;
+  }
+  
+  .ant-select-item-option-active {
+    background-color: #f5f5f5 !important;
+  }
+  
+  .ant-select-item-option-selected {
+    background-color: #e6f7ff !important;
+    font-weight: 600;
+  }
+  
+  /* Ajustes adicionales para el formulario */
+  .ant-form-item-label > label {
+    color: #333;
+    font-weight: 500;
+  }
+  
+  .ant-select:not(.ant-select-disabled):hover .ant-select-selector {
+    border-color: #40a9ff;
+  }
+  
+  .ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector {
+    border-color: #1890ff;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+  }
+  
+  /* Estilos para la visualización del estudiante en modo edición */
+  .student-display {
+    margin-bottom: 24px;
+  }
+  
+  .student-display label {
+    display: block;
+    color: #333;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+  
+  .student-display .student-info {
+    padding: 8px 12px;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    background-color: #fafafa;
+  }
+  
+  .student-display .student-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 4px;
+  }
+  
+  .student-display .student-document {
+    font-size: 12px;
+    color: #666;
+  } 
