@@ -2,7 +2,7 @@ import Institution from '../types/institution';
 
 class InstitutionService {
   constructor() {
-    this.apiUrl = 'https://ms.institution.machashop.top/api/v1/institutions'; // Cambia esta URL por la de tu API
+    this.apiUrl = 'https://lab.vallegrande.edu.pe/school/ms-institution/api/v1/institutions'; // Cambia esta URL por la de tu API
   }
 
   // Obtener todas las instituciones

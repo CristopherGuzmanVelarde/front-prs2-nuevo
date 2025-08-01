@@ -68,7 +68,7 @@ const UserSedeForm = () => {
         const fetchHeadquarters = async () => {
             setIsHeadquartersLoading(true);
             try {
-                const response = await axios.get('https://ms.institution.machashop.top/api/v1/headquarters');
+                const response = await axios.get('https://lab.vallegrande.edu.pe/school/ms-institution/api/v1/headquarters');
                 setHeadquarters(response.data || []);
             } catch (err) {
                 console.error('Error al cargar las sedes:', err);

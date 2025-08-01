@@ -202,10 +202,10 @@ const Sidebar = (props) => {
                   </Link>
                   <ul style={{ display: "none" }} className="menu-items8">
                     <li>
-                      <Link className={props?.activeClassName === 'employee-salary' ? 'active' : ''} to="/employeesalary"> Registro de Calificaciones </Link>
+                      <Link className={props?.activeClassName === 'grade-list' ? 'active' : ''} to="/grade"> Registro de Calificaciones </Link>
                     </li>
                     <li>
-                      <Link className={props?.activeClassName === 'employee-payslip' ? 'active' : ''} to="/payslip"> Notificaciones </Link>
+                      <Link className={props?.activeClassName === 'notifications' ? 'active' : ''} to="/notifications"> Notificaciones </Link>
                     </li>
                   </ul>
                 </li>

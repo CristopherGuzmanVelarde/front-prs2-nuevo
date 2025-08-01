@@ -3,7 +3,7 @@
 import axios from 'axios';
 
 // NOTA: Esta URL es un ejemplo y debe ser configurada para tu entorno.
-const API_URL = 'https://ms.user.machashop.top/users';
+const API_URL = 'https://lab.vallegrande.edu.pe/school/ms-user/api/v1/users';
 
 export const userService = {
     /**

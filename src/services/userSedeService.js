@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'https://ms.user.machashop.top/user-sedes';
+const API_URL = 'https://lab.vallegrande.edu.pe/school/ms-user/api/v1/user-sedes';
 
 export const userSedeService = {
     // Modify getAllUserSedes to accept status parameter

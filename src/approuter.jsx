@@ -11,6 +11,13 @@ import StudentProfile from "./pages/students/StudentProfile";
 import EnrollmentList from "./pages/enrollments/EnrollmentList";
 import AddEnrollment from "./pages/enrollments/AddEnrollment";
 import EditEnrollment from "./pages/enrollments/EditEnrollment";
+//Grades
+import { GradeList, AddGrade, EditGrade } from "./pages/grade";
+//Notifications
+import { NotificationList, AddNotification, EditNotification, BulkNotification } from "./pages/notification";
+// import { NotificationTemplates } from "./pages/notification"; // Temporarily commented
+//Test Component
+import TestAPIs from "./components/TestAPIs";
 //For Settings...
 // import Settings from "./components/settings/Settings";
 
@@ -47,8 +54,8 @@ const Approuter = () => {
           <Route path="/directors/*" element={<Directors />} />
 
 
-          <Route key="attendances" path="/attendances" element={<Attendence />} />,
-          <Route key="Justifications" path="/justifications" element={<Justifications />} />,
+          <Route key="attendances" path="/attendances" element={<Attendence />} />
+          <Route key="Justifications" path="/justifications" element={<Justifications />} />
 
           <Route path="/institution" element={<InstitutionsAll />} />
           <Route path="/add-institution" element={<AddInstitution />} />
@@ -60,13 +67,30 @@ const Approuter = () => {
           <Route path="/add-headquarter/:id" element={<AddHeadquarters />} />
           <Route path="/edit-headquarter/:id" element={<EditHeadquarters />} />
 
-          <Route path="/studentlist" element={<StudentList />} />,
-          <Route path="/add-student" element={<AddStudent />} />,
-          <Route path="/editstudent/:id" element={<EditStudent />} />,
-          <Route path="/studentprofile/:id" element={<StudentProfile />} />,
-          <Route path="/enrollmentlist" element={<EnrollmentList />} />,
-          <Route path="/add-enrollment" element={<AddEnrollment />} />,
+          <Route path="/studentlist" element={<StudentList />} />
+          <Route path="/add-student" element={<AddStudent />} />
+          <Route path="/editstudent/:id" element={<EditStudent />} />
+          <Route path="/studentprofile/:id" element={<StudentProfile />} />
+          <Route path="/enrollmentlist" element={<EnrollmentList />} />
+          <Route path="/add-enrollment" element={<AddEnrollment />} />
           <Route path="/editenrollment/:id" element={<EditEnrollment />} />
+
+          {/* Grade Routes */}
+          <Route path="/grade" element={<GradeList />} />
+          <Route path="/grade/add" element={<AddGrade />} />
+          <Route path="/grade/edit/:id" element={<EditGrade />} />
+
+          {/* Notification Routes */}
+          <Route path="/notifications" element={<NotificationList />} />
+          <Route path="/notifications/add" element={<AddNotification />} />
+          <Route path="/notifications/edit/:id" element={<EditNotification />} />
+          <Route path="/notifications/bulk" element={<BulkNotification />} />
+          {/* <Route path="/notifications/templates" element={<NotificationTemplates />} /> */} {/* Temporarily commented */}
+
+          {/* Test Route - Development Only */}
+          <Route path="/test-students-api" element={<TestAPIs />} />
+          <Route path="/test-apis" element={<TestAPIs />} />
+
           {AppRoutes.map((route) => route)}
         </Routes>
       </BrowserRouter>

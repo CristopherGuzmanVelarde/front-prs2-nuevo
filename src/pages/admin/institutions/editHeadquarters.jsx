@@ -65,6 +65,7 @@ const EditHeadquarters = () => {
       message.success('Sede actualizada correctamente');
       navigate(`/institution-headquarters/${institutionId}`);
     } catch (error) {
+      alert("Los campos debe ser únicos")
       message.error(`Error al actualizar sede: ${error.message}`);
       console.error('Error submitting updated headquarter data:', error);
     } finally {

@@ -63,7 +63,7 @@ const UserForm = ({ user, onSave, onCancel }) => {
         const fetchInstitution = async () => {
             setLoadingInstitutions(true);
             try {
-                const response = await axios.get('https://ms.institution.machashop.top/api/v1/institutions');
+                const response = await axios.get('https://lab.vallegrande.edu.pe/school/ms-institution/api/v1/institutions');
                 const institutionsData = response.data || [];
                 if (institutionsData.length > 0) {
                     const defaultId = institutionsData[0].id;

@@ -29,7 +29,7 @@ const UserSedeView = () => {
         // Fetch all necessary data in parallel
         const [userSedeData, headquartersData] = await Promise.all([
           userSedeService.getUserSedeById(id),
-          axios.get('https://ms.institution.machashop.top/api/v1/headquarters')
+          axios.get('https://lab.vallegrande.edu.pe/school/ms-institution/api/v1/headquarters')
         ]);
 
         setUserSede(userSedeData);

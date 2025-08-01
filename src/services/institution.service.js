@@ -2,7 +2,7 @@ import axios from 'axios';
 
 class InstitutionService {
   constructor() {
-    this.apiUrl = 'https://ms.institution.machashop.top/api/v1/institutions';
+    this.apiUrl = 'https://lab.vallegrande.edu.pe/school/ms-institution/api/v1/institutions';
   }
 
   async getAllInstitutions() {
