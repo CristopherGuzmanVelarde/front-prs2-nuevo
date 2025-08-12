@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Configuration for notification management API
 const notificationApiClient = axios.create({
-  baseURL: 'https://lab.vallegrande.edu.pe/school/ms-grade/notifications',
+  baseURL: 'https://lab.vallegrande.edu.pe/school/ms-grade/api/v1/notifications',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
@@ -41,6 +41,58 @@ const notificationService = {
       if (error.response && error.response.status === 404) {
         console.warn('Endpoint de notificaciones no encontrado, devolviendo array vacío');
         return [];
+      }
+      
+      throw error;
+    }
+  },
+
+  /**
+   * Obtiene notificaciones con paginación
+   * @param {number} page - Número de página (comenzando en 0)
+   * @param {number} size - Tamaño de página
+   * @param {string} sort - Campo de ordenamiento (opcional)
+   * @param {string} direction - Dirección de ordenamiento: 'asc' o 'desc' (opcional)
+   * @returns {Promise<Object>} Objeto con notificaciones paginadas y metadatos
+   */
+  async getNotificationsPaginated(page = 0, size = 10, sort = 'createdAt', direction = 'desc') {
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        size: size.toString(),
+        sort: `${sort},${direction}`
+      });
+      
+      const response = await notificationApiClient.get(`?${params}`);
+      return {
+        content: response.data || [],
+        totalElements: response.headers['x-total-count'] || response.data?.length || 0,
+        totalPages: Math.ceil((response.headers['x-total-count'] || response.data?.length || 0) / size),
+        size: size,
+        number: page,
+        first: page === 0,
+        last: page >= Math.ceil((response.headers['x-total-count'] || response.data?.length || 0) / size) - 1
+      };
+    } catch (error) {
+      console.error('Error al obtener notificaciones paginadas:', error);
+      
+      // Si el backend no soporta paginación, hacer paginación manual
+      if (error.response && (error.response.status === 400 || error.response.status === 404)) {
+        console.warn('Paginación no soportada en backend, usando paginación manual');
+        const allNotifications = await this.getAllNotifications();
+        const start = page * size;
+        const end = start + size;
+        const content = allNotifications.slice(start, end);
+        
+        return {
+          content,
+          totalElements: allNotifications.length,
+          totalPages: Math.ceil(allNotifications.length / size),
+          size: size,
+          number: page,
+          first: page === 0,
+          last: page >= Math.ceil(allNotifications.length / size) - 1
+        };
       }
       
       throw error;
@@ -133,7 +185,13 @@ const notificationService = {
    */
   async createNotification(notificationData) {
     try {
-      const response = await notificationApiClient.post('', notificationData);
+      // Solo agregar la fecha de envío si el estado es 'SENT'
+      const notificationData_final = { ...notificationData };
+      if (notificationData.status === 'SENT') {
+        notificationData_final.sentAt = new Date().toISOString();
+      }
+      
+      const response = await notificationApiClient.post('', notificationData_final);
       return response.data;
     } catch (error) {
       console.error('Error al crear notificación:', error);
@@ -149,7 +207,16 @@ const notificationService = {
    */
   async updateNotification(id, notificationData) {
     try {
-      const response = await notificationApiClient.put(`/${id}`, notificationData);
+      let updatedData = { ...notificationData };
+      // Normalizar campos mínimos esperados por backend
+      // Actualizar fecha de envío según estado
+      if (updatedData.status === 'SENT') {
+        updatedData.sentAt = new Date().toISOString();
+      } else if (updatedData.status !== 'SENT') {
+        // Remover / limpiar fecha de envío si ya no está enviada
+        updatedData.sentAt = null;
+      }
+      const response = await notificationApiClient.put(`/${id}`, updatedData);
       return response.data;
     } catch (error) {
       console.error(`Error al actualizar notificación ${id}:`, error);
@@ -168,6 +235,26 @@ const notificationService = {
       return response.data;
     } catch (error) {
       console.error(`Error al marcar notificación ${id} como leída:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Envía una notificación (actualiza el estado a SENT y agrega fecha de envío)
+   * @param {string} id - ID de la notificación
+   * @returns {Promise<Object>} Notificación enviada
+   */
+  async sendNotification(id) {
+    try {
+      const updateData = {
+        status: 'SENT',
+        sentAt: new Date().toISOString()
+      };
+      
+      const response = await notificationApiClient.put(`/${id}`, updateData);
+      return response.data;
+    } catch (error) {
+      console.error(`Error al enviar notificación ${id}:`, error);
       throw error;
     }
   },
@@ -196,7 +283,12 @@ const notificationService = {
    */
   async resendNotification(id) {
     try {
-      const response = await notificationApiClient.post(`/${id}/resend`);
+      // Agregar la fecha de reenvío
+      const resendData = {
+        sentAt: new Date().toISOString()
+      };
+      
+      const response = await notificationApiClient.post(`/${id}/resend`, resendData);
       return response.data;
     } catch (error) {
       console.error(`Error al reenviar notificación ${id}:`, error);
@@ -287,7 +379,17 @@ const notificationService = {
    */
   async createBulkNotifications(notifications) {
     try {
-      const promises = notifications.map(notification => 
+      // Solo agregar la fecha de envío a notificaciones que tienen estado 'SENT'
+      const currentDate = new Date().toISOString();
+      const notificationsProcessed = notifications.map(notification => {
+        const processed = { ...notification };
+        if (notification.status === 'SENT') {
+          processed.sentAt = currentDate;
+        }
+        return processed;
+      });
+      
+      const promises = notificationsProcessed.map(notification => 
         notificationApiClient.post('', notification)
       );
       const responses = await Promise.all(promises);
@@ -305,7 +407,13 @@ const notificationService = {
    */
   async sendMassNotification(massNotificationData) {
     try {
-      const response = await notificationApiClient.post('/mass-send', massNotificationData);
+      // Agregar la fecha de envío automáticamente
+      const massNotificationWithSentDate = {
+        ...massNotificationData,
+        sentAt: new Date().toISOString()
+      };
+      
+      const response = await notificationApiClient.post('/mass-send', massNotificationWithSentDate);
       return response.data;
     } catch (error) {
       console.error('Error al enviar notificación masiva:', error);

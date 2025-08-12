@@ -71,6 +71,62 @@ const gradeService = {
   },
 
   /**
+   * Obtiene calificaciones con paginación
+   * @param {number} page - Número de página (comenzando en 0)
+   * @param {number} size - Tamaño de página
+   * @param {string} sort - Campo de ordenamiento (opcional)
+   * @param {string} direction - Dirección de ordenamiento: 'asc' o 'desc' (opcional)
+   * @returns {Promise<Object>} Objeto con calificaciones paginadas y metadatos
+   */
+  async getGradesPaginated(page = 0, size = 10, sort = 'evaluationDate', direction = 'desc') {
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        size: size.toString(),
+        sort: `${sort},${direction}`
+      });
+      
+      const response = await gradeApiClient.get(`?${params}`);
+      return {
+        content: response.data || [],
+        totalElements: response.headers['x-total-count'] || response.data?.length || 0,
+        totalPages: Math.ceil((response.headers['x-total-count'] || response.data?.length || 0) / size),
+        size: size,
+        number: page,
+        first: page === 0,
+        last: page >= Math.ceil((response.headers['x-total-count'] || response.data?.length || 0) / size) - 1
+      };
+    } catch (error) {
+      console.error('Error al obtener calificaciones paginadas:', error);
+      
+      // Si el backend no soporta paginación, hacer paginación manual
+      if (error.response && (error.response.status === 400 || error.response.status === 404)) {
+        console.warn('Paginación no soportada en backend, usando paginación manual');
+        try {
+          const allGrades = await this.getAllGrades();
+          const start = page * size;
+          const end = start + size;
+          const content = allGrades.slice(start, end);
+          
+          return {
+            content,
+            totalElements: allGrades.length,
+            totalPages: Math.ceil(allGrades.length / size),
+            size: size,
+            number: page,
+            first: page === 0,
+            last: page >= Math.ceil(allGrades.length / size) - 1
+          };
+        } catch (fallbackError) {
+          throw fallbackError;
+        }
+      }
+      
+      throw error;
+    }
+  },
+
+  /**
    * Obtiene una calificación por ID
    * @param {string} id - ID de la calificación
    * @returns {Promise<Object>} Calificación encontrada
@@ -161,7 +217,7 @@ const gradeService = {
    */
   async createGrade(gradeData) {
     try {
-      const response = await gradeApiClient.post(' ', gradeData);
+      const response = await gradeApiClient.post('', gradeData);
       return response.data;
     } catch (error) {
       console.error('Error al crear calificación:', error);
@@ -225,6 +281,62 @@ const gradeService = {
       return response.data;
     } catch (error) {
       console.error('Error al obtener calificaciones inactivas:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Obtiene calificaciones inactivas con paginación
+   * @param {number} page - Número de página (comenzando en 0)
+   * @param {number} size - Tamaño de página
+   * @param {string} sort - Campo de ordenamiento (opcional)
+   * @param {string} direction - Dirección de ordenamiento: 'asc' o 'desc' (opcional)
+   * @returns {Promise<Object>} Objeto con calificaciones inactivas paginadas y metadatos
+   */
+  async getInactiveGradesPaginated(page = 0, size = 10, sort = 'evaluationDate', direction = 'desc') {
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        size: size.toString(),
+        sort: `${sort},${direction}`
+      });
+      
+      const response = await gradeApiClient.get(`/inactive?${params}`);
+      return {
+        content: response.data || [],
+        totalElements: response.headers['x-total-count'] || response.data?.length || 0,
+        totalPages: Math.ceil((response.headers['x-total-count'] || response.data?.length || 0) / size),
+        size: size,
+        number: page,
+        first: page === 0,
+        last: page >= Math.ceil((response.headers['x-total-count'] || response.data?.length || 0) / size) - 1
+      };
+    } catch (error) {
+      console.error('Error al obtener calificaciones inactivas paginadas:', error);
+      
+      // Si el backend no soporta paginación, hacer paginación manual
+      if (error.response && (error.response.status === 400 || error.response.status === 404)) {
+        console.warn('Paginación no soportada para inactivas, usando paginación manual');
+        try {
+          const allInactiveGrades = await this.getAllInactiveGrades();
+          const start = page * size;
+          const end = start + size;
+          const content = allInactiveGrades.slice(start, end);
+          
+          return {
+            content,
+            totalElements: allInactiveGrades.length,
+            totalPages: Math.ceil(allInactiveGrades.length / size),
+            size: size,
+            number: page,
+            first: page === 0,
+            last: page >= Math.ceil(allInactiveGrades.length / size) - 1
+          };
+        } catch (fallbackError) {
+          throw fallbackError;
+        }
+      }
+      
       throw error;
     }
   }

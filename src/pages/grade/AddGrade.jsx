@@ -179,7 +179,7 @@ const AddGrade = () => {
         message: 'Calificación creada correctamente',
         type: 'success',
         onConfirm: () => {
-          navigate('/grades');
+          navigate('/grade');
         }
       });
 

@@ -43,7 +43,7 @@ const Attendence = () => {
 
   const fetchStudents = async () => {
     try {
-      const res = await fetch('https://ms.attendance.machashop.top/students');
+      const res = await fetch('https://lab.vallegrande.edu.pe/school/ms-attendance/students');
       if (!res.ok) throw new Error('Failed to fetch students');
       const data = await res.json();
       setStudents(data);
@@ -54,7 +54,7 @@ const Attendence = () => {
 
   const fetchActiveAttendances = async () => {
     try {
-      const res = await fetch('https://ms.attendance.machashop.top/attendances');
+      const res = await fetch('https://lab.vallegrande.edu.pe/school/ms-attendance/attendances');
       if (!res.ok) throw new Error('Failed to fetch active attendances');
       const data = await res.json();
       const combined = data.map(att => {
@@ -72,7 +72,7 @@ const Attendence = () => {
 
   const fetchInactiveAttendances = async () => {
     try {
-      const res = await fetch('https://ms.attendance.machashop.top/attendances/inactive');
+      const res = await fetch('https://lab.vallegrande.edu.pe/school/ms-attendance/attendances/inactive');
       if (!res.ok) throw new Error('Failed to fetch inactive attendances');
       const data = await res.json();
       const combined = data.map(att => {
@@ -101,7 +101,7 @@ const Attendence = () => {
 
   const createAttendance = async (attendanceData) => {
     try {
-      const res = await fetch('https://ms.attendance.machashop.top/attendances', {
+      const res = await fetch('https://lab.vallegrande.edu.pe/school/ms-attendance/attendances', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(attendanceData)
@@ -134,7 +134,7 @@ const Attendence = () => {
 
   const deleteAttendance = async (id) => {
     try {
-      const response = await fetch(`https://ms.attendance.machashop.top/attendances/${id}`, {
+      const response = await fetch(`https://lab.vallegrande.edu.pe/school/ms-attendance/attendances/${id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -153,7 +153,7 @@ const Attendence = () => {
 
   const restoreAttendance = async (id) => {
     try {
-      const response = await fetch(`https://ms.attendance.machashop.top/attendance/${id}/restore`, {
+      const response = await fetch(`https://lab.vallegrande.edu.pe/school/ms-attendance/attendance/${id}/restore`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -166,7 +166,7 @@ const Attendence = () => {
 
       // Update both active and inactive lists
       setInactiveAttendances(prev => prev.filter(a => a.id !== id));
-      const responseActive = await fetch('https://ms.attendance.machashop.top/attendances');
+      const responseActive = await fetch('https://lab.vallegrande.edu.pe/school/ms-attendance/attendances');
       if (!responseActive.ok) throw new Error('Failed to fetch updated active attendances');
       const data = await responseActive.json();
       const combined = data.map(att => {

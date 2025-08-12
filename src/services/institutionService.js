@@ -182,7 +182,7 @@ class InstitutionService {
   // Eliminar (inactivar) una sede
   async deleteHeadquarter(id) {
     try {
-      const response = await fetch(`https://ms.institution.machashop.top/api/v1/headquarters/${id}`, {
+      const response = await fetch(`https://lab.vallegrande.edu.pe/school/ms-institution/api/v1/headquarters/${id}`, {
         method: 'DELETE',
       });
       
@@ -200,7 +200,7 @@ class InstitutionService {
   // Restaurar una sede
   async restoreHeadquarter(id) {
     try {
-      const response = await fetch(`https://ms.institution.machashop.top/api/v1/headquarters/restore/${id}`, {
+      const response = await fetch(`https://lab.vallegrande.edu.pe/school/ms-institution/api/v1/headquarters/restore/${id}`, {
         method: 'PUT',
       });
       
@@ -226,7 +226,7 @@ class InstitutionService {
       
       console.log('Creating headquarter with data:', headquarterData);
       
-      const response = await fetch(`https://ms.institution.machashop.top/api/v1/headquarters`, {
+      const response = await fetch(`https://lab.vallegrande.edu.pe/school/ms-institution/api/v1/headquarters`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -256,7 +256,7 @@ class InstitutionService {
       
       console.log('Updating headquarter with data:', headquarterData);
       
-      const response = await fetch(`https://ms.institution.machashop.top/api/v1/headquarters/${id}`, {
+      const response = await fetch(`https://lab.vallegrande.edu.pe/school/ms-institution/api/v1/headquarters/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -279,7 +279,7 @@ class InstitutionService {
   // Obtener sede por ID
   async getHeadquarterById(id) {
     try {
-      const response = await fetch(`https://ms.institution.machashop.top/api/v1/headquarters/${id}`);
+      const response = await fetch(`https://lab.vallegrande.edu.pe/school/ms-institution/api/v1/headquarters/${id}`);
       
       if (!response.ok) {
         throw new Error(`Error fetching headquarter: ${response.status}`);

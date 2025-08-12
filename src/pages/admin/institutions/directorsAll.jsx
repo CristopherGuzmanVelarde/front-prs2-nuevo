@@ -151,40 +151,7 @@ const DirectorsAll = () => {
         {
             title: "Permisos",
             dataIndex: "permissions",
-        },
-        {
-            title: "",
-            dataIndex: "actions",
-            render: (text, record) => (
-                <>
-                    <div className="text-end">
-                        <div className="dropdown dropdown-action">
-                            <Link
-                                to="#"
-                                className="action-icon dropdown-toggle"
-                                data-bs-toggle="dropdown"
-                                aria-expanded="false"
-                            >
-                                <i className="fas fa-ellipsis-v" />
-                            </Link>
-                            <div className="dropdown-menu dropdown-menu-end">
-                                <Link className="dropdown-item" to={`/edit-director/${record.id}`}>
-                                    <i className="far fa-edit me-2" />
-                                    Editar
-                                </Link>
-                                <Link 
-                                    className="dropdown-item" 
-                                    to="#" 
-                                >
-                                    <i className="fa fa-trash-alt me-2"></i> 
-                                    {record.statusValue === 'ACTIVE' ? 'Inactivar' : 'Activar'}
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-                </>
-            ),
-        },
+        }
     ];
 
     return (

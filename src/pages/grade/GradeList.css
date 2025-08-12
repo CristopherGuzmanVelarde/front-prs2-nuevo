@@ -1,180 +1,179 @@
 .grade-list-container {
-    padding: 20px;
-  }
-  
+  padding: 20px;
+}
+
+.grade-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.grade-list-filters {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.grade-list-table {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.grade-status-badge {
+  font-size: 0.8em;
+  padding: 4px 8px;
+}
+
+.grade-score {
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+.grade-score.passed {
+  color: #28a745;
+}
+
+.grade-score.recovery {
+  color: #ffc107;
+}
+
+.grade-score.failed {
+  color: #dc3545;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 5px;
+}
+
+.action-buttons .btn {
+  padding: 4px 8px;
+  font-size: 0.8em;
+}
+
+.grade-details-modal .modal-body {
+  padding: 20px;
+}
+
+.grade-details-row {
+  margin-bottom: 15px;
+}
+
+.grade-details-label {
+  font-weight: bold;
+  color: #495057;
+}
+
+.notifications-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  border-left: 4px solid #007bff;
+  margin-bottom: 10px;
+}
+
+.notification-item.success {
+  border-left-color: #28a745;
+}
+
+.notification-item.warning {
+  border-left-color: #ffc107;
+}
+
+.notification-item.danger {
+  border-left-color: #dc3545;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: #6c757d;
+}
+
+.empty-state i {
+  font-size: 3em;
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
+.loading-spinner {
+  text-align: center;
+  padding: 40px;
+}
+
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+.filters-row {
+  gap: 15px;
+}
+
+.search-input {
+  position: relative;
+}
+
+.search-input .input-group-text {
+  background-color: #e9ecef;
+  border-right: none;
+}
+
+.search-input .form-control {
+  border-left: none;
+}
+
+.table-stats {
+  background-color: #f8f9fa;
+  padding: 10px 15px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  font-size: 0.9em;
+  color: #6c757d;
+}
+
+@media (max-width: 768px) {
   .grade-list-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-  }
-  
-  .grade-list-filters {
-    background-color: #f8f9fa;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-  }
-  
-  .grade-list-table {
-    background-color: white;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-  
-  .grade-status-badge {
-    font-size: 0.8em;
-    padding: 4px 8px;
-  }
-  
-  .grade-score {
-    font-weight: bold;
-    font-size: 1.1em;
-  }
-  
-  .grade-score.passed {
-    color: #28a745;
-  }
-  
-  .grade-score.recovery {
-    color: #ffc107;
-  }
-  
-  .grade-score.failed {
-    color: #dc3545;
-  }
-  
-  .action-buttons {
-    display: flex;
-    gap: 5px;
-  }
-  
-  .action-buttons .btn {
-    padding: 4px 8px;
-    font-size: 0.8em;
-  }
-  
-  .grade-details-modal .modal-body {
-    padding: 20px;
-  }
-  
-  .grade-details-row {
-    margin-bottom: 15px;
-  }
-  
-  .grade-details-label {
-    font-weight: bold;
-    color: #495057;
-  }
-  
-  .notifications-list {
-    max-height: 400px;
-    overflow-y: auto;
-  }
-  
-  .notification-item {
-    border-left: 4px solid #007bff;
-    margin-bottom: 10px;
-  }
-  
-  .notification-item.success {
-    border-left-color: #28a745;
-  }
-  
-  .notification-item.warning {
-    border-left-color: #ffc107;
-  }
-  
-  .notification-item.danger {
-    border-left-color: #dc3545;
-  }
-  
-  .empty-state {
-    text-align: center;
-    padding: 40px;
-    color: #6c757d;
-  }
-  
-  .empty-state i {
-    font-size: 3em;
-    margin-bottom: 20px;
-    opacity: 0.5;
-  }
-  
-  .loading-spinner {
-    text-align: center;
-    padding: 40px;
-  }
-  
-  .error-message {
-    background-color: #f8d7da;
-    color: #721c24;
-    padding: 15px;
-    border-radius: 5px;
-    margin-bottom: 20px;
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch;
   }
   
   .filters-row {
-    gap: 15px;
+    flex-direction: column;
   }
   
-  .search-input {
-    position: relative;
+  .action-buttons {
+    flex-direction: column;
   }
   
-  .search-input .input-group-text {
-    background-color: #e9ecef;
-    border-right: none;
-  }
-  
-  .search-input .form-control {
-    border-left: none;
-  }
-  
-  .table-stats {
-    background-color: #f8f9fa;
-    padding: 10px 15px;
-    border-radius: 5px;
-    margin-bottom: 15px;
+  .table-responsive {
     font-size: 0.9em;
-    color: #6c757d;
+  }
+}
+
+/* Responsive table improvements */
+@media (max-width: 576px) {
+  .table td, .table th {
+    padding: 8px 4px;
+    font-size: 0.8em;
   }
   
-  @media (max-width: 768px) {
-    .grade-list-header {
-      flex-direction: column;
-      gap: 15px;
-      align-items: stretch;
-    }
-    
-    .filters-row {
-      flex-direction: column;
-    }
-    
-    .action-buttons {
-      flex-direction: column;
-    }
-    
-    .table-responsive {
-      font-size: 0.9em;
-    }
+  .action-buttons {
+    flex-direction: row;
+    justify-content: center;
   }
   
-  /* Responsive table improvements */
-  @media (max-width: 576px) {
-    .table td, .table th {
-      padding: 8px 4px;
-      font-size: 0.8em;
-    }
-    
-    .action-buttons {
-      flex-direction: row;
-      justify-content: center;
-    }
-    
-    .action-buttons .btn {
-      padding: 2px 6px;
-    }
+  .action-buttons .btn {
+    padding: 2px 6px;
   }
-  
+}

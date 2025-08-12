@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Table, Button, Form, InputGroup, Spinner, Modal, Card, Row, Col, Badge, Alert } from 'react-bootstrap';
+import { Table, Button, Form, InputGroup, Spinner, Modal, Card, Row, Col, Badge, Alert, Dropdown } from 'react-bootstrap';
 import { notificationService } from '../../services/notificationService';
 import { studentService } from '../../services';
 import { teacherService } from '../../services/teacherService';
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
+import Pagination from '../../components/Pagination';
 import CustomAlert from '../common/CustomAlert';
 import { Notification, RECIPIENT_TYPES, NOTIFICATION_TYPES, NOTIFICATION_STATUS, NOTIFICATION_CHANNELS } from '../../types/notification.types';
 import './NotificationList.css';
@@ -44,23 +45,63 @@ const NotificationList = () => {
     failed: 0
   });
 
-  // Función helper para determinar si una notificación está eliminada
-  const isNotificationDeleted = (notification) => {
-    return notification.deleted === true || 
-           notification.deleted === 'true' || 
-           notification.deleted === 1 ||
-           notification.status === 'DELETED' ||
-           notification.isDeleted === true ||
-           notification.active === false;
+  // Estados para paginación
+  const [pagination, setPagination] = useState({
+    currentPage: 0,
+    pageSize: 10,
+    totalElements: 0,
+    totalPages: 0,
+    usePagination: true
+  });
+
+  // Funciones para manejar paginación
+  const handlePageChange = (newPage) => {
+    setPagination(prev => ({ ...prev, currentPage: newPage }));
+    loadNotifications(newPage, pagination.pageSize);
   };
 
-  const loadNotifications = async () => {
+  const handlePageSizeChange = (newPageSize) => {
+    setPagination(prev => ({ 
+      ...prev, 
+      pageSize: newPageSize, 
+      currentPage: 0 
+    }));
+    loadNotifications(0, newPageSize);
+  };
+
+  // Función helper para determinar si una notificación está eliminada
+  const isNotificationDeleted = (notification) => {
+    // Verificar diferentes campos que podrían indicar eliminación
+    const deletedValues = [
+      notification.deleted === true,
+      notification.deleted === 'true',
+      notification.deleted === 1,
+      notification.deleted === '1',
+      notification.status === 'DELETED',
+      notification.status === 'deleted',
+      notification.isDeleted === true,
+      notification.active === false,
+      notification.estado === 'eliminado',
+      notification.estado === 'ELIMINADO'
+    ];
+    
+    return deletedValues.some(value => value === true);
+  };
+
+  const loadNotifications = async (page = pagination.currentPage, size = pagination.pageSize) => {
     try {
       setLoading(true);
       setError('');
       
       // Obtener todas las notificaciones y filtrar en el frontend
-      const allData = await notificationService.getAllNotifications();
+      let allData = await notificationService.getAllNotifications();
+      
+      // Validar que allData sea un array
+      if (!Array.isArray(allData)) {
+        console.warn('⚠️ getAllNotifications no devolvió un array válido:', allData);
+        allData = [];
+      }
+      
       console.log('🔍 Todas las notificaciones recibidas:', allData);
       console.log('🔍 Filtro showDeleted actual:', filters.showDeleted);
       
@@ -115,13 +156,57 @@ const NotificationList = () => {
       }
       
       console.log(`🔍 Resultado del filtrado: ${data.length} notificaciones de ${allData.length} totales`);
-      console.log('🔍 IDs de notificaciones filtradas:', data.map(n => n.id));
       
-      setNotifications(data);
-      calculateStats(data);
+      // Aplicar filtros adicionales (búsqueda, tipo, estado, etc.)
+      let finalData = data;
+      
+      // Filtro de búsqueda
+      if (searchTerm) {
+        finalData = finalData.filter(notification => 
+          notification.message?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          getRecipientName(notification.recipientId, notification.recipientType)?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
+      
+      // Filtros por tipo, estado, canal
+      if (filters.recipientType !== 'all') {
+        finalData = finalData.filter(notification => notification.recipientType === filters.recipientType);
+      }
+      
+      if (filters.notificationType !== 'all') {
+        finalData = finalData.filter(notification => notification.notificationType === filters.notificationType);
+      }
+      
+      if (filters.status !== 'all') {
+        finalData = finalData.filter(notification => notification.status === filters.status);
+      }
+      
+      if (filters.channel !== 'all') {
+        finalData = finalData.filter(notification => notification.channel === filters.channel);
+      }
+      
+      // Calcular paginación
+      const totalElements = finalData.length;
+      const totalPages = Math.ceil(totalElements / size);
+      const startIndex = page * size;
+      const endIndex = startIndex + size;
+      const paginatedData = finalData.slice(startIndex, endIndex);
+      
+      // Actualizar estados
+      setPagination(prev => ({
+        ...prev,
+        currentPage: page,
+        totalElements,
+        totalPages
+      }));
+      
+      setNotifications(paginatedData || []);
+      calculateStats(finalData || []); // Usar todos los datos filtrados para las estadísticas
     } catch (error) {
       console.error('Error al cargar notificaciones:', error);
       setError('Error al cargar los datos. Por favor, intente nuevamente.');
+      setNotifications([]);
+      calculateStats([]);
     } finally {
       setLoading(false);
     }
@@ -130,27 +215,32 @@ const NotificationList = () => {
   const loadStudents = async () => {
     try {
       const data = await studentService.getAllStudents();
-      setStudents(data);
+      setStudents(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error al cargar estudiantes:', error);
+      setStudents([]);
     }
   };
 
   const loadTeachers = async () => {
     try {
       const data = await teacherService.getAllTeachers();
-      setTeachers(data);
+      setTeachers(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error al cargar profesores:', error);
+      setTeachers([]);
     }
   };
 
   const calculateStats = (notificationList) => {
+    // Verificar que notificationList sea un array válido
+    const validList = Array.isArray(notificationList) ? notificationList : [];
+    
     const stats = {
-      total: notificationList.length,
-      pending: notificationList.filter(n => n.status === 'PENDING').length,
-      sent: notificationList.filter(n => n.status === 'SENT').length,
-      failed: notificationList.filter(n => n.status === 'FAILED').length
+      total: validList.length,
+      pending: validList.filter(n => n.status === 'PENDING').length,
+      sent: validList.filter(n => n.status === 'SENT').length,
+      failed: validList.filter(n => n.status === 'FAILED').length
     };
     setStats(stats);
   };
@@ -161,6 +251,16 @@ const NotificationList = () => {
     loadStudents();
     loadTeachers();
   }, [filters.showDeleted]);
+
+  // Reiniciar paginación cuando cambien los filtros de búsqueda
+  useEffect(() => {
+    if (pagination.currentPage !== 0) {
+      setPagination(prev => ({ ...prev, currentPage: 0 }));
+      loadNotifications(0, pagination.pageSize);
+    } else {
+      loadNotifications(0, pagination.pageSize);
+    }
+  }, [filters.recipientType, filters.notificationType, filters.status, filters.channel, searchTerm]);
 
   const showAlert = (config) => {
     setAlert({
@@ -181,29 +281,41 @@ const NotificationList = () => {
   };
 
   const getRecipientName = (recipientId, recipientType) => {
-    if (recipientType === 'STUDENT') {
+    // Si el recipientType no está definido o está vacío, intentar detectar automáticamente
+    if (!recipientType || recipientType === '' || recipientType === 'undefined') {
+      // Buscar primero en estudiantes
+      const student = students.find(s => s.id === recipientId);
+      if (student) {
+        return `${student.firstName} ${student.lastName}`;
+      }
+      
+      // Si no es estudiante, buscar en profesores
+      const teacher = teachers.find(t => t.id === recipientId);
+      if (teacher) {
+        return `${teacher.firstName} ${teacher.lastName}`;
+      }
+      
+      return recipientId || 'Destinatario no encontrado';
+    }
+    
+    // Si recipientType está definido, usar la lógica original
+    if (recipientType === 'STUDENT' || recipientType === 'Estudiante') {
       const student = students.find(s => s.id === recipientId);
       return student ? `${student.firstName} ${student.lastName}` : 'Estudiante no encontrado';
-    } else if (recipientType === 'TEACHER') {
+    } else if (recipientType === 'TEACHER' || recipientType === 'Profesor') {
       const teacher = teachers.find(t => t.id === recipientId);
       return teacher ? `${teacher.firstName} ${teacher.lastName}` : 'Profesor no encontrado';
+    } else if (recipientType === 'PARENT' || recipientType === 'Padre') {
+      return 'Padre de familia';
     }
-    return recipientId;
+    
+    // Si es un nombre completo (como en el backend actualizado)
+    if (recipientType && recipientType.includes(' ')) {
+      return recipientType;
+    }
+    
+    return recipientId || 'Destinatario no encontrado';
   };
-
-  const filteredNotifications = notifications.filter(notification => {
-    const recipientName = getRecipientName(notification.recipientId, notification.recipientType).toLowerCase();
-    const matchesSearch = recipientName.includes(searchTerm.toLowerCase()) ||
-                         notification.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         notification.notificationType.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesRecipientType = filters.recipientType === 'all' || notification.recipientType === filters.recipientType;
-    const matchesNotificationType = filters.notificationType === 'all' || notification.notificationType === filters.notificationType;
-    const matchesStatus = filters.status === 'all' || notification.status === filters.status;
-    const matchesChannel = filters.channel === 'all' || notification.channel === filters.channel;
-    
-    return matchesSearch && matchesRecipientType && matchesNotificationType && matchesStatus && matchesChannel;
-  });
 
   const handleDelete = async (id) => {
     showAlert({
@@ -265,6 +377,36 @@ const NotificationList = () => {
     });
   };
 
+  const handleSend = async (id) => {
+    showAlert({
+      title: 'Confirmar envío',
+      message: '¿Está seguro que desea enviar esta notificación?',
+      type: 'info',
+      onConfirm: async () => {
+        try {
+          setProcessingAction(true);
+          await notificationService.sendNotification(id);
+          await loadNotifications();
+          showAlert({
+            title: 'Éxito',
+            message: 'Notificación enviada correctamente',
+            type: 'success',
+            autoClose: true,
+            onConfirm: () => hideAlert()
+          });
+        } catch (error) {
+          showAlert({
+            title: 'Error',
+            message: 'Error al enviar la notificación',
+            type: 'error'
+          });
+        } finally {
+          setProcessingAction(false);
+        }
+      }
+    });
+  };
+
   const handleResend = async (id) => {
     showAlert({
       title: 'Confirmar reenvío',
@@ -295,6 +437,55 @@ const NotificationList = () => {
     });
   };
 
+  const handleChangeStatus = async (id, newStatus) => {
+    const statusLabels = {
+      'PENDING': 'Pendiente',
+      'SENT': 'Enviado',
+      'FAILED': 'Fallido'
+    };
+
+    showAlert({
+      title: 'Confirmar cambio de estado',
+      message: `¿Está seguro que desea cambiar el estado a "${statusLabels[newStatus]}"?`,
+      type: 'info',
+      onConfirm: async () => {
+        try {
+          setProcessingAction(true);
+          const current = notifications.find(n => n.id === id);
+          if (!current) throw new Error('Notificación no encontrada');
+
+            // Construir payload mínimo
+          const updateData = {
+            recipientId: current.recipientId,
+            recipientType: current.recipientType,
+            message: current.message,
+            notificationType: current.notificationType,
+            channel: current.channel,
+            status: newStatus
+          };
+
+          await notificationService.updateNotification(id, updateData);
+          await loadNotifications();
+          showAlert({
+            title: 'Éxito',
+            message: `Estado cambiado a "${statusLabels[newStatus]}" correctamente`,
+            type: 'success',
+            autoClose: true,
+            onConfirm: () => hideAlert()
+          });
+        } catch (error) {
+          showAlert({
+            title: 'Error',
+            message: 'Error al cambiar el estado de la notificación',
+            type: 'error'
+          });
+        } finally {
+          setProcessingAction(false);
+        }
+      }
+    });
+  };
+
   const handleViewDetails = (notification) => {
     setSelectedNotification(notification);
     setShowDetails(true);
@@ -309,10 +500,13 @@ const NotificationList = () => {
   };
 
   const handleSelectAll = () => {
-    if (selectedNotifications.length === filteredNotifications.length) {
+    const validNotifications = Array.isArray(notifications) ? notifications : [];
+    const validSelected = Array.isArray(selectedNotifications) ? selectedNotifications : [];
+    
+    if (validSelected.length === validNotifications.length && validNotifications.length > 0) {
       setSelectedNotifications([]);
     } else {
-      setSelectedNotifications(filteredNotifications.map(n => n.id));
+      setSelectedNotifications(validNotifications.map(n => n.id));
     }
   };
 
@@ -343,24 +537,140 @@ const NotificationList = () => {
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    if (!dateString || dateString === 'N/A' || dateString === 'Invalid Date') return 'N/A';
+    
+    try {
+      // Intentar parsear diferentes formatos de fecha
+      let date;
+      
+      // Si es un array (formato del backend Java)
+      if (Array.isArray(dateString)) {
+        const [year, month, day, hour = 0, minute = 0, second = 0] = dateString;
+        date = new Date(year, month - 1, day, hour, minute, second);
+      } 
+      // Si es un string ISO o timestamp
+      else if (typeof dateString === 'string' || typeof dateString === 'number') {
+        date = new Date(dateString);
+      }
+      // Si ya es un objeto Date
+      else if (dateString instanceof Date) {
+        date = dateString;
+      }
+      else {
+        return 'Formato inválido';
+      }
+      
+      // Verificar si la fecha es válida
+      if (isNaN(date.getTime())) {
+        return 'Fecha inválida';
+      }
+      
+      return date.toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Error formateando fecha:', error, 'Input:', dateString);
+      return 'Error de formato';
+    }
   };
 
   const getNotificationTypeBadge = (type) => {
     const typeObj = NOTIFICATION_TYPES.find(t => t.value === type);
-    return typeObj ? typeObj.label : type;
+    const label = typeObj ? typeObj.label : type;
+    
+    // Definir colores según el tipo de notificación
+    let badgeColor = 'secondary'; // Color por defecto
+    
+    switch (type) {
+      case 'GRADE_PUBLISHED':
+      case 'Calificación Publicada':
+        badgeColor = 'success';
+        break;
+      case 'GRADE_UPDATED':
+      case 'Calificación Actualizada':
+        badgeColor = 'info';
+        break;
+      case 'LOW_PERFORMANCE':
+      case 'Bajo Rendimiento':
+        badgeColor = 'warning';
+        break;
+      case 'ATTENDANCE_ALERT':
+      case 'Alerta de Asistencia':
+        badgeColor = 'danger';
+        break;
+      case 'ENROLLMENT_CONFIRMATION':
+      case 'Confirmación de Matrícula':
+        badgeColor = 'primary';
+        break;
+      case 'PAYMENT_REMINDER':
+      case 'Recordatorio de Pago':
+        badgeColor = 'warning';
+        break;
+      case 'SYSTEM_MAINTENANCE':
+      case 'Mantenimiento del Sistema':
+        badgeColor = 'dark';
+        break;
+      case 'GENERAL_ANNOUNCEMENT':
+      case 'Anuncio General':
+        badgeColor = 'info';
+        break;
+      default:
+        badgeColor = 'secondary';
+    }
+    
+    return { label, color: badgeColor };
   };
 
-  const getRecipientTypeBadge = (type) => {
-    const typeObj = RECIPIENT_TYPES.find(t => t.value === type);
-    return typeObj ? typeObj.label : type;
+  const getRecipientTypeBadge = (type, recipientId) => {
+    // Si el tipo no está definido o está vacío, intentar detectar automáticamente
+    if (!type || type === '' || type === 'undefined') {
+      // Buscar en estudiantes
+      const student = students.find(s => s.id === recipientId);
+      if (student) {
+        return 'Estudiante';
+      }
+      
+      // Buscar en profesores
+      const teacher = teachers.find(t => t.id === recipientId);
+      if (teacher) {
+        return 'Profesor';
+      }
+      
+      return 'Desconocido';
+    }
+    
+    // Si es un nombre completo (como viene del backend actualizado)
+    if (type && type.includes(' ')) {
+      // Buscar en estudiantes para determinar el tipo
+      const student = students.find(s => s.id === recipientId);
+      if (student) {
+        return 'Estudiante';
+      }
+      
+      // Buscar en profesores
+      const teacher = teachers.find(t => t.id === recipientId);
+      if (teacher) {
+        return 'Profesor';
+      }
+      
+      return 'Persona';
+    }
+    
+    // Mapear tipos conocidos
+    const typeMapping = {
+      'STUDENT': 'Estudiante',
+      'TEACHER': 'Profesor', 
+      'PARENT': 'Padre',
+      'Estudiante': 'Estudiante',
+      'Profesor': 'Profesor',
+      'Padre': 'Padre'
+    };
+    
+    return typeMapping[type] || type;
   };
 
   const getChannelBadge = (channel) => {
@@ -374,13 +684,6 @@ const NotificationList = () => {
     const color = notificationObj.getStatusColor();
     const icon = notificationObj.getStatusIcon();
     return <Badge bg={color}><i className={`fas ${icon} me-1`}></i>{status}</Badge>;
-  };
-
-  const formatNotificationId = (id) => {
-    if (!id) return 'N/A';
-    // Tomar los primeros 8 caracteres y formatearlos en grupos de 4
-    const shortId = id.substring(0, 8).toUpperCase();
-    return `${shortId.substring(0, 4)}-${shortId.substring(4, 8)}`;
   };
 
   return (
@@ -579,10 +882,29 @@ const NotificationList = () => {
                 <div className="alert alert-danger">{error}</div>
               ) : (
                 <>
-                  <div className="mb-3">
+                  <div className="mb-3 d-flex justify-content-between align-items-center">
                     <small className="text-muted">
-                      Mostrando {filteredNotifications.length} de {notifications.length} notificaciones
+                      {pagination.usePagination 
+                        ? `Página ${pagination.currentPage + 1} de ${pagination.totalPages} (${pagination.totalElements} registros)`
+                        : `Mostrando ${notifications.length} notificaciones`}
                     </small>
+                    
+                    {pagination.usePagination && (
+                      <div className="page-size-selector">
+                        <small className="text-muted me-2">Registros por página:</small>
+                        <Form.Select
+                          size="sm"
+                          style={{ width: 'auto', display: 'inline-block' }}
+                          value={pagination.pageSize}
+                          onChange={(e) => handlePageSizeChange(parseInt(e.target.value))}
+                        >
+                          <option value={5}>5</option>
+                          <option value={10}>10</option>
+                          <option value={25}>25</option>
+                          <option value={50}>50</option>
+                        </Form.Select>
+                      </div>
+                    )}
                   </div>
                   
                   <Table responsive striped hover>
@@ -591,7 +913,7 @@ const NotificationList = () => {
                         <th>
                           <Form.Check
                             type="checkbox"
-                            checked={selectedNotifications.length === filteredNotifications.length && filteredNotifications.length > 0}
+                            checked={selectedNotifications.length === notifications.length && notifications.length > 0}
                             onChange={handleSelectAll}
                           />
                         </th>
@@ -600,15 +922,11 @@ const NotificationList = () => {
                         <th>Mensaje</th>
                         <th>Estado</th>
                         <th>Canal</th>
-                        <th>ID</th>
-                        <th>Eliminado</th>
-                        <th>Creado</th>
-                        <th>Enviado</th>
                         <th>Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredNotifications.map((notification) => (
+                      {notifications.map((notification) => (
                         <tr key={notification.id}>
                           <td>
                             <Form.Check
@@ -621,19 +939,24 @@ const NotificationList = () => {
                             <div>
                               <strong>{getRecipientName(notification.recipientId, notification.recipientType)}</strong>
                               <br />
-                              <small className="text-muted">{getRecipientTypeBadge(notification.recipientType)}</small>
+                              <small className="text-muted">{getRecipientTypeBadge(notification.recipientType, notification.recipientId)}</small>
                             </div>
                           </td>
                           <td>
-                            <Badge bg="secondary">
-                              {getNotificationTypeBadge(notification.notificationType)}
-                            </Badge>
+                            {(() => {
+                              const typeBadge = getNotificationTypeBadge(notification.notificationType);
+                              return (
+                                <Badge bg={typeBadge.color}>
+                                  {typeBadge.label}
+                                </Badge>
+                              );
+                            })()}
                           </td>
                           <td>
                             <div className="message-preview">
-                              {notification.message.length > 50 
+                              {notification.message && notification.message.length > 50 
                                 ? `${notification.message.substring(0, 50)}...` 
-                                : notification.message}
+                                : (notification.message || 'Sin mensaje')}
                             </div>
                           </td>
                           <td>{getStatusBadge(notification)}</td>
@@ -642,30 +965,6 @@ const NotificationList = () => {
                               {getChannelBadge(notification.channel)}
                             </small>
                           </td>
-                          <td>
-                            <code title={notification.id} style={{cursor: 'help', fontSize: '0.8em'}}>
-                              {formatNotificationId(notification.id)}
-                            </code>
-                          </td>
-                          <td>
-                            {(() => {
-                              const isDeleted = isNotificationDeleted(notification);
-                              
-                              return (
-                                <div>
-                                  <Badge bg={isDeleted ? 'danger' : 'success'}>
-                                    {isDeleted ? 'SÍ' : 'NO'}
-                                  </Badge>
-                                  <br />
-                                  <small className="text-muted">
-                                    deleted: {JSON.stringify(notification.deleted)}
-                                  </small>
-                                </div>
-                              );
-                            })()}
-                          </td>
-                          <td>{formatDate(notification.createdAt)}</td>
-                          <td>{formatDate(notification.sentAt)}</td>
                           <td>
                             <div className="action-buttons">
                               <Button
@@ -677,6 +976,64 @@ const NotificationList = () => {
                               >
                                 <i className="fas fa-eye"></i>
                               </Button>
+                              
+                              {/* Dropdown para cambiar estado */}
+                              {!filters.showDeleted && (
+                                <Dropdown className="d-inline me-1">
+                                  <Dropdown.Toggle 
+                                    variant="outline-secondary" 
+                                    size="sm"
+                                    disabled={processingAction}
+                                    title={`Estado actual: ${notification.status === 'PENDING' ? 'Pendiente' : notification.status === 'SENT' ? 'Enviado' : 'Fallido'}`}
+                                  >
+                                    <i className="fas fa-exchange-alt"></i>
+                                  </Dropdown.Toggle>
+                                  <Dropdown.Menu>
+                                    <Dropdown.Header>
+                                      <i className="fas fa-info-circle me-1"></i>
+                                      Estado actual: {notification.status === 'PENDING' ? 'Pendiente' : notification.status === 'SENT' ? 'Enviado' : 'Fallido'}
+                                    </Dropdown.Header>
+                                    <Dropdown.Divider />
+                                    <small className="dropdown-header text-muted">Cambiar a:</small>
+                                    {notification.status !== 'PENDING' && (
+                                      <Dropdown.Item 
+                                        onClick={() => handleChangeStatus(notification.id, 'PENDING')}
+                                      >
+                                        <i className="fas fa-clock text-warning me-2"></i>
+                                        Pendiente
+                                      </Dropdown.Item>
+                                    )}
+                                    {notification.status !== 'SENT' && (
+                                      <Dropdown.Item 
+                                        onClick={() => handleChangeStatus(notification.id, 'SENT')}
+                                      >
+                                        <i className="fas fa-check-circle text-success me-2"></i>
+                                        Enviado
+                                      </Dropdown.Item>
+                                    )}
+                                    {notification.status !== 'FAILED' && (
+                                      <Dropdown.Item 
+                                        onClick={() => handleChangeStatus(notification.id, 'FAILED')}
+                                      >
+                                        <i className="fas fa-times-circle text-danger me-2"></i>
+                                        Fallido
+                                      </Dropdown.Item>
+                                    )}
+                                  </Dropdown.Menu>
+                                </Dropdown>
+                              )}
+                              {notification.status === 'PENDING' && !filters.showDeleted && (
+                                <Button
+                                  variant="outline-success"
+                                  size="sm"
+                                  className="me-1"
+                                  onClick={() => handleSend(notification.id)}
+                                  disabled={processingAction}
+                                  title="Enviar"
+                                >
+                                  <i className="fas fa-paper-plane"></i>
+                                </Button>
+                              )}
                               {notification.status === 'FAILED' && !filters.showDeleted && (
                                 <Button
                                   variant="outline-warning"
@@ -727,7 +1084,7 @@ const NotificationList = () => {
                     </tbody>
                   </Table>
 
-                  {filteredNotifications.length === 0 && (
+                  {notifications.length === 0 && (
                     <div className="text-center py-4">
                       <i className="fas fa-bell-slash fa-3x text-muted mb-3"></i>
                       <p className="text-muted">
@@ -740,6 +1097,23 @@ const NotificationList = () => {
                           Las notificaciones eliminadas aparecerán aquí
                         </small>
                       )}
+                    </div>
+                  )}
+
+                  {/* Componente de paginación */}
+                  {pagination.usePagination && pagination.totalPages > 1 && (
+                    <div className="mt-4">
+                      <Pagination
+                        currentPage={pagination.currentPage}
+                        totalPages={pagination.totalPages}
+                        totalElements={pagination.totalElements}
+                        pageSize={pagination.pageSize}
+                        onPageChange={handlePageChange}
+                        showInfo={true}
+                        showSizeSelector={true}
+                        onPageSizeChange={handlePageSizeChange}
+                        className="justify-content-center"
+                      />
                     </div>
                   )}
                 </>
@@ -759,15 +1133,23 @@ const NotificationList = () => {
             <Row>
               <Col md={6}>
                 <p><strong>Destinatario:</strong> {getRecipientName(selectedNotification.recipientId, selectedNotification.recipientType)}</p>
-                <p><strong>Tipo de Destinatario:</strong> {getRecipientTypeBadge(selectedNotification.recipientType)}</p>
-                <p><strong>Tipo de Notificación:</strong> {getNotificationTypeBadge(selectedNotification.notificationType)}</p>
+                <p><strong>Tipo de Destinatario:</strong> {getRecipientTypeBadge(selectedNotification.recipientType, selectedNotification.recipientId)}</p>
+                <p><strong>Tipo de Notificación:</strong> 
+                  {(() => {
+                    const typeBadge = getNotificationTypeBadge(selectedNotification.notificationType);
+                    return (
+                      <Badge bg={typeBadge.color} className="ms-2">
+                        {typeBadge.label}
+                      </Badge>
+                    );
+                  })()}
+                </p>
                 <p><strong>Canal:</strong> {getChannelBadge(selectedNotification.channel)}</p>
               </Col>
               <Col md={6}>
                 <p><strong>Estado:</strong> {getStatusBadge(selectedNotification)}</p>
                 <p><strong>Fecha de Creación:</strong> {formatDate(selectedNotification.createdAt)}</p>
                 <p><strong>Fecha de Envío:</strong> {formatDate(selectedNotification.sentAt)}</p>
-                <p><strong>ID:</strong> <code title={selectedNotification.id} style={{cursor: 'help'}}>{formatNotificationId(selectedNotification.id)}</code></p>
               </Col>
               <Col md={12}>
                 <hr />

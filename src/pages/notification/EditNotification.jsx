@@ -32,22 +32,49 @@ const EditNotification = () => {
   });
 
   useEffect(() => {
-    loadNotificationData();
-    loadStudents();
+    const init = async () => {
+      await loadStudents();
+      await loadNotificationData();
+    };
+    init();
   }, [id]);
 
   const loadNotificationData = async () => {
     try {
       setLoadingData(true);
       const notification = await notificationService.getNotificationById(id);
-      
+      if (!notification) throw new Error('Notificación no encontrada');
+
+      // Normalizar posibles variantes de nombres de campos provenientes del backend
+      const rawRecipientType = notification.recipientType || notification.recipient_type || '';
+      const rawRecipientId = notification.recipientId || notification.recipient_id || '';
+      const rawNotificationType = notification.notificationType || notification.type || '';
+      const rawChannel = notification.channel || notification.deliveryChannel || 'EMAIL';
+      const rawStatus = notification.status || 'PENDING';
+
+      let recipientType = rawRecipientType;
+      let recipientId = rawRecipientId;
+
+      // Si viene como nombre completo y todavía no tenemos estudiantes cargados, guardamos tal cual.
+      // Luego un efecto posterior intentará mapearlo cuando students esté disponible.
+      if (recipientType && recipientType.includes(' ') && !recipientId) {
+        // Intento inmediato si students ya está
+        if (students.length > 0) {
+          const matchStudent = students.find(s => `${s.firstName} ${s.lastName}` === recipientType);
+          if (matchStudent) {
+            recipientId = matchStudent.id;
+            recipientType = 'STUDENT';
+          }
+        }
+      }
+
       setFormData({
-        recipientId: notification.recipientId || '',
-        recipientType: notification.recipientType || '',
+        recipientId: recipientId,
+        recipientType: recipientType,
         message: notification.message || '',
-        notificationType: notification.notificationType || '',
-        status: notification.status || '',
-        channel: notification.channel || ''
+        notificationType: rawNotificationType || '',
+        status: rawStatus,
+        channel: rawChannel || 'EMAIL'
       });
     } catch (error) {
       console.error('Error al cargar notificación:', error);
@@ -222,6 +249,23 @@ const EditNotification = () => {
         return [];
     }
   };
+
+  // Efecto adicional: cuando los estudiantes se cargan y recipientType es un nombre completo, mapearlo.
+  useEffect(() => {
+    if (!formData.recipientType) return;
+    const validCodes = ['STUDENT', 'TEACHER', 'PARENT', 'ADMIN'];
+    const looksLikeFullName = formData.recipientType.includes(' ');
+    if (students.length > 0 && looksLikeFullName && !validCodes.includes(formData.recipientType)) {
+      const matchStudent = students.find(s => `${s.firstName} ${s.lastName}` === formData.recipientType);
+      if (matchStudent) {
+        setFormData(prev => ({
+          ...prev,
+          recipientType: 'STUDENT',
+          recipientId: prev.recipientId || matchStudent.id
+        }));
+      }
+    }
+  }, [students, formData.recipientType]);
 
   if (loadingData) {
     return (

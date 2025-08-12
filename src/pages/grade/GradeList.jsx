@@ -5,6 +5,7 @@ import { gradeService } from '../../services/gradeService';
 import { studentService } from '../../services';
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
+import Pagination from '../../components/Pagination';
 import CustomAlert from '../common/CustomAlert';
 import { Grade, ACADEMIC_PERIODS, EVALUATION_TYPES, COURSES } from '../../types/grade.types';
 import './GradeList.css';
@@ -22,6 +23,16 @@ const GradeList = () => {
     evaluationType: 'all',
     status: 'active'
   });
+  
+  // Estados para paginación
+  const [pagination, setPagination] = useState({
+    currentPage: 0,
+    pageSize: 10,
+    totalElements: 0,
+    totalPages: 0,
+    usePagination: true
+  });
+  
   const [showDetails, setShowDetails] = useState(false);
   const [selectedGrade, setSelectedGrade] = useState(null);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -34,14 +45,57 @@ const GradeList = () => {
     onConfirm: null
   });
 
-  const loadGrades = async () => {
+  const loadGrades = async (page = pagination.currentPage, size = pagination.pageSize) => {
     try {
       setLoading(true);
       setError('');
-      const data = filters.status === 'active' 
-        ? await gradeService.getAllGrades()
-        : await gradeService.getAllInactiveGrades();
-      setGrades(data);
+      
+      let data;
+      if (pagination.usePagination) {
+        // Intentar usar paginación
+        try {
+          data = filters.status === 'active' 
+            ? await gradeService.getGradesPaginated(page, size)
+            : await gradeService.getInactiveGradesPaginated(page, size);
+          
+          setGrades(data.content);
+          setPagination(prev => ({
+            ...prev,
+            currentPage: data.number,
+            totalElements: data.totalElements,
+            totalPages: data.totalPages
+          }));
+        } catch (paginationError) {
+          // Si falla la paginación, usar método tradicional
+          console.warn('Paginación no disponible, usando método tradicional');
+          setPagination(prev => ({ ...prev, usePagination: false }));
+          
+          const allData = filters.status === 'active' 
+            ? await gradeService.getAllGrades()
+            : await gradeService.getAllInactiveGrades();
+          
+          setGrades(allData);
+          setPagination(prev => ({
+            ...prev,
+            currentPage: 0,
+            totalElements: allData.length,
+            totalPages: Math.ceil(allData.length / size)
+          }));
+        }
+      } else {
+        // Usar método tradicional sin paginación del backend
+        const allData = filters.status === 'active' 
+          ? await gradeService.getAllGrades()
+          : await gradeService.getAllInactiveGrades();
+        
+        setGrades(allData);
+        setPagination(prev => ({
+          ...prev,
+          currentPage: 0,
+          totalElements: allData.length,
+          totalPages: Math.ceil(allData.length / size)
+        }));
+      }
     } catch (error) {
       console.error('Error al cargar calificaciones:', error);
       setError('Error al cargar los datos. Por favor, intente nuevamente.');
@@ -65,6 +119,28 @@ const GradeList = () => {
     loadGrades();
     loadStudents();
   }, [filters.status]);
+
+  // Reiniciar paginación cuando cambien los filtros
+  useEffect(() => {
+    if (pagination.currentPage !== 0) {
+      setPagination(prev => ({ ...prev, currentPage: 0 }));
+      loadGrades(0, pagination.pageSize);
+    }
+  }, [filters.academicPeriod, filters.evaluationType, searchTerm]);
+
+  const handlePageChange = (newPage) => {
+    setPagination(prev => ({ ...prev, currentPage: newPage }));
+    loadGrades(newPage, pagination.pageSize);
+  };
+
+  const handlePageSizeChange = (newPageSize) => {
+    setPagination(prev => ({ 
+      ...prev, 
+      pageSize: newPageSize, 
+      currentPage: 0 
+    }));
+    loadGrades(0, newPageSize);
+  };
 
   const showAlert = (config) => {
     setAlert({
@@ -93,18 +169,39 @@ const GradeList = () => {
     return course ? `${course.value} - ${course.label}` : courseId;
   };
 
-  const filteredGrades = grades.filter(grade => {
-    const studentName = getStudentName(grade.studentId).toLowerCase();
-    const courseName = getCourseName(grade.courseId).toLowerCase();
-    const matchesSearch = studentName.includes(searchTerm.toLowerCase()) ||
-                         courseName.includes(searchTerm.toLowerCase()) ||
-                         grade.evaluationType.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesAcademicPeriod = filters.academicPeriod === 'all' || grade.academicPeriod === filters.academicPeriod;
-    const matchesEvaluationType = filters.evaluationType === 'all' || grade.evaluationType === filters.evaluationType;
-    
-    return matchesSearch && matchesAcademicPeriod && matchesEvaluationType;
-  });
+  const filteredGrades = () => {
+    if (pagination.usePagination && searchTerm === '' && 
+        filters.academicPeriod === 'all' && filters.evaluationType === 'all') {
+      // Si estamos usando paginación del backend y no hay filtros locales,
+      // retornar los datos tal como vienen del backend
+      return grades;
+    }
+
+    // Aplicar filtros locales
+    return grades.filter(grade => {
+      const studentName = getStudentName(grade.studentId).toLowerCase();
+      const courseName = getCourseName(grade.courseId).toLowerCase();
+      const matchesSearch = studentName.includes(searchTerm.toLowerCase()) ||
+                           courseName.includes(searchTerm.toLowerCase()) ||
+                           grade.evaluationType.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesAcademicPeriod = filters.academicPeriod === 'all' || grade.academicPeriod === filters.academicPeriod;
+      const matchesEvaluationType = filters.evaluationType === 'all' || grade.evaluationType === filters.evaluationType;
+      
+      return matchesSearch && matchesAcademicPeriod && matchesEvaluationType;
+    });
+  };
+
+  const displayedGrades = filteredGrades();
+  
+  // Actualizar información de paginación si estamos usando filtros locales
+  const effectivePagination = {
+    ...pagination,
+    totalElements: pagination.usePagination && searchTerm === '' && 
+                   filters.academicPeriod === 'all' && filters.evaluationType === 'all' 
+                   ? pagination.totalElements 
+                   : displayedGrades.length
+  };
 
   const handleDelete = async (id) => {
     showAlert({
@@ -296,10 +393,30 @@ const GradeList = () => {
                 <div className="alert alert-danger">{error}</div>
               ) : (
                 <>
-                  <div className="mb-3">
+                  <div className="mb-3 d-flex justify-content-between align-items-center">
                     <small className="text-muted">
-                      Mostrando {filteredGrades.length} de {grades.length} calificaciones
+                      {pagination.usePagination && searchTerm === '' && 
+                       filters.academicPeriod === 'all' && filters.evaluationType === 'all' 
+                        ? `Página ${pagination.currentPage + 1} de ${pagination.totalPages} (${pagination.totalElements} registros)`
+                        : `Mostrando ${displayedGrades.length} de ${grades.length} calificaciones`}
                     </small>
+                    
+                    {pagination.usePagination && (
+                      <div className="page-size-selector">
+                        <small className="text-muted me-2">Registros por página:</small>
+                        <Form.Select
+                          size="sm"
+                          style={{ width: 'auto', display: 'inline-block' }}
+                          value={pagination.pageSize}
+                          onChange={(e) => handlePageSizeChange(parseInt(e.target.value))}
+                        >
+                          <option value={5}>5</option>
+                          <option value={10}>10</option>
+                          <option value={25}>25</option>
+                          <option value={50}>50</option>
+                        </Form.Select>
+                      </div>
+                    )}
                   </div>
                   
                   <Table responsive striped hover>
@@ -316,7 +433,7 @@ const GradeList = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredGrades.map((grade) => (
+                      {displayedGrades.map((grade) => (
                         <tr key={grade.id}>
                           <td>{getStudentName(grade.studentId)}</td>
                           <td>{getCourseName(grade.courseId)}</td>
@@ -387,9 +504,26 @@ const GradeList = () => {
                     </tbody>
                   </Table>
 
-                  {filteredGrades.length === 0 && (
+                  {displayedGrades.length === 0 && (
                     <div className="text-center py-4">
                       <p className="text-muted">No se encontraron calificaciones</p>
+                    </div>
+                  )}
+
+                  {/* Componente de paginación */}
+                  {pagination.usePagination && searchTerm === '' && 
+                   filters.academicPeriod === 'all' && filters.evaluationType === 'all' && (
+                    <div className="mt-4">
+                      <Pagination
+                        currentPage={pagination.currentPage}
+                        totalPages={pagination.totalPages}
+                        totalElements={pagination.totalElements}
+                        pageSize={pagination.pageSize}
+                        onPageChange={handlePageChange}
+                        showInfo={false}
+                        showSizeSelector={false}
+                        className="justify-content-center"
+                      />
                     </div>
                   )}
                 </>

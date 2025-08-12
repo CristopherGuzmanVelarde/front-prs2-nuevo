@@ -35,7 +35,7 @@ const EditAttendanceForm = ({ attendance, onEdit, onClose, students }) => {
     }
 
     try {
-      const response = await fetch(`https://ms.attendance.machashop.top/attendances/${attendance.id}`, {
+      const response = await fetch(`https://lab.vallegrande.edu.pe/school/ms-attendance/attendances/${attendance.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

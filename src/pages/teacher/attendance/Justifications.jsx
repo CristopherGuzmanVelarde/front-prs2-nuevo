@@ -71,7 +71,7 @@ const Justifications = () => {
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        const response = await fetch('https://ms.students.machashop.top/api/v1/students');
+        const response = await fetch('https://lab.vallegrande.edu.pe/school/ms-attendance/students');
         if (!response.ok) {
           throw new Error('Failed to fetch students');
         }
@@ -96,7 +96,7 @@ const Justifications = () => {
 
   const changeJustificationStatus = async (justificationId, newStatus) => {
     try {
-      const response = await fetch(`https://ms.attendance.machashop.top/justifications/${justificationId}/status?status=${newStatus}`, {
+      const response = await fetch(`https://lab.vallegrande.edu.pe/school/ms-attendance/justifications/${justificationId}/status?status=${newStatus}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -117,7 +117,7 @@ const Justifications = () => {
   // New function for logical delete
   const deleteJustification = async (justificationId) => {
     try {
-      const response = await fetch(`https://ms.attendance.machashop.top/justifications/${justificationId}`, {
+      const response = await fetch(`https://lab.vallegrande.edu.pe/school/ms-attendance/justifications/${justificationId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -222,7 +222,7 @@ const Justifications = () => {
     
 
     try {
-      const response = await fetch('https://ms.attendance.machashop.top/justifications', {
+      const response = await fetch('https://lab.vallegrande.edu.pe/school/ms-attendance/justifications', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -251,7 +251,7 @@ const Justifications = () => {
 
   const fetchUnjustifiedStudents = async () => {
     try {
-      const res = await fetch('https://ms.attendance.machashop.top/attendances');
+      const res = await fetch('https://lab.vallegrande.edu.pe/school/ms-attendance/attendances');
       const attendances = await res.json();
 
       // Filter attendances for active and unjustified absences
@@ -265,7 +265,7 @@ const Justifications = () => {
       const studentIds = [...new Set(activeUnjustifiedAttendances.map(a => a.studentId))];
 
       // Fetch student info for these IDs
-      const studentsRes = await fetch('https://ms.students.machashop.top/api/v1/students');
+      const studentsRes = await fetch('https://lab.vallegrande.edu.pe/school/ms-attendance/students');
       const students = await studentsRes.json();
 
       // Create a map of student info for quick lookup
@@ -295,7 +295,7 @@ const Justifications = () => {
 
   const fetchActiveJustifications = async () => {
     try {
-      const res = await fetch('https://ms.attendance.machashop.top/justifications');
+      const res = await fetch('https://lab.vallegrande.edu.pe/school/ms-attendance/justifications');
       if (!res.ok) throw new Error('Failed to fetch active justifications');
       const justifications = await res.json();
       const activeJust = justifications.filter(j => j.active);
@@ -310,7 +310,7 @@ const Justifications = () => {
 
   const fetchInactiveJustifications = async () => {
     try {
-      const res = await fetch('https://ms.attendance.machashop.top/justifications/inactive');
+      const res = await fetch('https://lab.vallegrande.edu.pe/school/ms-attendance/justifications/inactive');
       if (!res.ok) throw new Error('Failed to fetch inactive justifications');
       const data = await res.json();
       setInactiveJustifications(data);
