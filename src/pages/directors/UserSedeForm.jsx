@@ -361,7 +361,20 @@ const UserSedeForm = () => {
                                 </div>
                                 <div className="col-md-6 mb-3">
                                     <label htmlFor={`schedule-${detail.key}`} className="form-label">Jornada</label>
-                                    <input id={`schedule-${detail.key}`} type="text" className={`form-control ${getDetailValidationClass(index, 'schedule')}`} name="schedule" value={detail.schedule} onChange={(e) => handleDetailChange(detail.key, 'schedule', e.target.value)} onBlur={(e) => handleDetailBlur(index, e)} disabled={isLoading} />
+                                    <select 
+                                        id={`schedule-${detail.key}`} 
+                                        className={`form-control ${getDetailValidationClass(index, 'schedule')}`} 
+                                        name="schedule" 
+                                        value={detail.schedule} 
+                                        onChange={(e) => handleDetailChange(detail.key, 'schedule', e.target.value)} 
+                                        onBlur={(e) => handleDetailBlur(index, e)} 
+                                        disabled={isLoading}
+                                    >
+                                        <option value="">Seleccione una jornada</option>
+                                        <option value="mañana">Mañana</option>
+                                        <option value="tarde">Tarde</option>
+                                        <option value="mañana/tarde">Mañana/Tarde</option>
+                                    </select>
                                     {detailsErrors[index]?.schedule && <div className="invalid-feedback">{detailsErrors[index].schedule}</div>}
                                 </div>
                                 <div className="col-md-12 mb-3">
@@ -394,5 +407,3 @@ const UserSedeForm = () => {
     );
 };
 export default UserSedeForm;
-
-    

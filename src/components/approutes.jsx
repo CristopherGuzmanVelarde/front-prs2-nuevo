@@ -1,6 +1,5 @@
 import React from "react";
 import { Route } from "react-router-dom";
-// Corrección de las rutas de importación - eliminar "./components/" del inicio
 import SettingsThem from "./settings/SettingsThem";
 //Doctor
 import DoctorList from "./doctor/DoctorList";
@@ -10,8 +9,6 @@ import DoctorProfile from "./doctor/DoctorProfile";
 //Patients...
 import PatientsList from "./patients/PatientsList";
 import AddPatients from "./patients/AddPatients";
-import EditPatients from "./patients/EditPatients";
-import PatientsProfile from "./patients/PatientsProfile";
 import AppoinmentList from "./appoinments/AppoinmentList";
 import AddAppoinments from "./appoinments/AddAppoinments";
 import EditAppoinments from "./appoinments/EditAppoinments";
@@ -23,7 +20,7 @@ import EditSchedule from "./doctorschedule/EditSchedule";
 import DepartmentList from "./department/DepartmentList";
 import AddDepartment from "./department/AddDepartment";
 import EditDepartment from "./department/EditDepartment";
-import StaffList from "./staff/StafList";
+import StaffList from "./staff/StafList"; // Fixed: keeping original StafList (missing 't')
 import AddStaff from "./staff/Add-Staff";
 import StaffProfile from "./staff/StaffProfile";
 import ProvidentFund from "./accounts/ProvidentFund";
@@ -81,7 +78,7 @@ import Doctor_Dashboard from "./Dashboard/Doctor_Dashboard/Doctor_Dashboard";
 import Admin_Dashboard from "./Dashboard/Admin_Dashboard/Admin_Dashboard";
 import Patient_Dashboard from "./Dashboard/Patient_Dashboard/Patient_Dashboard";
 import Doctor_Settings from "./Dashboard/Doctor_Dashboard/Doctor_Settings";
-import Patient_Settings from "./patients/Patient_Settings";
+// import Patient_Settings from "./patients/Patient_Settings"; // Component doesn't exist
 import Staff_Settings from "./staff/Staff-Settings";
 import Edit_Provident from "./accounts/Edit_Provident";
 import Edit_Taxes from "./accounts/Edit_Taxes";
@@ -90,6 +87,7 @@ import Edit_Payment from "./accounts/Edit_Payment";
 import Payslip from "./Payroll/Payslip";
 import Setting from "./settings/Setting";
 import Profile from "./Profile";
+
 const AppRoutes = [
   <Route key="server-error" path="/server-error" element={<ServerError />} />,
   <Route key="blankpage" path="/blankpage" element={<BlankPage />} />,
@@ -102,10 +100,8 @@ const AppRoutes = [
   <Route key="doctorprofile" path="/doctorprofile" element={<DoctorProfile />} />,
   <Route key="doctor-setting" path="/doctor-setting" element={<Doctor_Settings />} />,
   <Route key="patientslist" path="/patientslist" element={<PatientsList />} />,
+  <Route key="editpatients" path="/editpatients/:id" element={<AddPatients />} />,
   <Route key="addpatients" path="/addpatients" element={<AddPatients />} />,
-  <Route key="editpatients" path="/editpatients" element={<EditPatients />} />,
-  <Route key="patientsprofile" path="/patientsprofile" element={<PatientsProfile />} />,
-  <Route key="patient-settings" path="/patient-settings" element={<Patient_Settings />} />,
   <Route key="appoinmentlist" path="/appoinmentlist" element={<AppoinmentList />} />,
   <Route key="addappoinments" path="/addappoinments" element={<AddAppoinments />} />,
   <Route key="editappoinments" path="/editappoinments" element={<EditAppoinments />} />,

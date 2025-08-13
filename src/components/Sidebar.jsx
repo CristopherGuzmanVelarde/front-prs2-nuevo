@@ -105,6 +105,26 @@ const Sidebar = (props) => {
                     </li>
                   </ul>
                 </li>
+
+                {/* Gestión Educativa */}
+                <li className="submenu">
+                  <Link to="#" id="menu-item-gestion" onClick={(e) => handleClick(e, "menu-item-gestion", "menu-items-gestion")}>
+                    <span className="menu-side">
+                      <img src={patients} alt="" />
+                    </span>
+                    <span>Gestión Educativa</span>
+                    <span className="menu-arrow" />
+                  </Link>
+                  <ul style={{ display: "none" }} className="menu-items-gestion">
+                    <li>
+                      <Link className={props?.activeClassName === 'patient-list' ? 'active' : ''} to="/patientslist">Lista de Usuarios</Link>
+                    </li>
+                    <li>
+                      <Link className={props?.activeClassName === 'add-patient' ? 'active' : ''} to="/addpatients">Agrega o Edita Usuarios</Link>
+                    </li>
+                  </ul>
+                </li>
+
                 <li className="submenu">
                   <Link to="#" id="menu-item2" onClick={(e) => handleClick(e, "menu-item2", "menu-items2")}>
                     <span className="menu-side">

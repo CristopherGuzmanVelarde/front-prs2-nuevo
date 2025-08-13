@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import Select from 'react-select';
 import axios from 'axios';
 import { userService } from '../../services/userService'; 
@@ -56,6 +57,7 @@ const UserForm = ({ user, onSave, onCancel }) => {
     const [errors, setErrors] = useState([{}]);
     const [touched, setTouched] = useState([{}]);
     const [defaultInstitutionId, setDefaultInstitutionId] = useState('');
+    const [institutions, setInstitutions] = useState([]);
     const [loadingInstitutions, setLoadingInstitutions] = useState(true);
     const [passwordVisibility, setPasswordVisibility] = useState({});
 
@@ -65,6 +67,8 @@ const UserForm = ({ user, onSave, onCancel }) => {
             try {
                 const response = await axios.get('https://lab.vallegrande.edu.pe/school/ms-institution/api/v1/institutions');
                 const institutionsData = response.data || [];
+                setInstitutions(institutionsData); // Guardar las instituciones completas
+                
                 if (institutionsData.length > 0) {
                     const defaultId = institutionsData[0].id;
                     setDefaultInstitutionId(defaultId);
@@ -88,6 +92,13 @@ const UserForm = ({ user, onSave, onCancel }) => {
         };
         fetchInstitution();
     }, [isEditMode]);
+
+    // Función para obtener el código molecular de una institución por su ID
+    const getInstitutionModularCode = (institutionId) => {
+        if (!institutionId || institutions.length === 0) return institutionId;
+        const institution = institutions.find(inst => inst.id === institutionId);
+        return institution ? institution.modularCode : institutionId;
+    };
 
     const validateField = (index, name, value) => {
         const currentUser = users[index];
@@ -410,13 +421,13 @@ const UserForm = ({ user, onSave, onCancel }) => {
                             </div>
                              <div className="col-sm-6">
                                 <div className="form-group">
-                                    <label htmlFor={`institutionId-${index}`}>ID Institución (Default)</label>
+                                    <label htmlFor={`institutionId-${index}`}>Código Molecular (Institución)</label>
                                     <input 
                                         type="text" 
                                         className={`form-control ${getValidationClass(index, 'institutionId')}`}
                                         id={`institutionId-${index}`} 
                                         name="institutionId" 
-                                        value={loadingInstitutions ? 'Cargando...' : currentUser.institutionId} 
+                                        value={loadingInstitutions ? 'Cargando...' : getInstitutionModularCode(currentUser.institutionId)} 
                                         readOnly 
                                         disabled 
                                     />
@@ -464,6 +475,27 @@ const UserForm = ({ user, onSave, onCancel }) => {
             </div>
         </form>
     );
+};
+
+UserForm.propTypes = {
+    user: PropTypes.shape({
+        id: PropTypes.string,
+        _id: PropTypes.string,
+        firstName: PropTypes.string,
+        lastName: PropTypes.string,
+        email: PropTypes.string,
+        phone: PropTypes.string,
+        userName: PropTypes.string,
+        documentType: PropTypes.string,
+        documentNumber: PropTypes.string,
+        password: PropTypes.string,
+        role: PropTypes.string,
+        status: PropTypes.string,
+        institutionId: PropTypes.string,
+        permissions: PropTypes.array,
+    }),
+    onSave: PropTypes.func.isRequired,
+    onCancel: PropTypes.func.isRequired,
 };
 
 export default UserForm;
